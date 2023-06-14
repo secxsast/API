@@ -1,0 +1,656 @@
+###############################################################################################################
+# RSA SecurID Authentication API - OpenAPI Interface Definition
+###############################################################################################################
+# This file defines a REpresentational State Transfer (REST) Interface for authentication. It can be 
+# used with the OpenAPI tools to generate client interfaces for a number of different languages.
+#--------------------------------------------------------------------------------------------------------------
+# Please be sure to reference the most up-to-date version of the interface definition available on RSA Link at:
+#
+#     https://community.rsa.com/docs/DOC-71396
+#
+###############################################################################################################
+# Copyright (c) 2020 - RSA, a Dell Technologies company.
+###############################################################################################################
+swagger: '2.0'
+info:
+  title: RSA SecurID Authentication API
+  description: This defines the RSA SecurID Authentication API. This supports a REST interface to perform multi-factor, multi-step authentications. The caller must invoke the Initialize interface to start an authentication attempt and call the Verify method until the ResponseCode is either SUCCESS, ERROR, or FAIL. Each server response contains CredentialMethods, one of which must be provided in the subjectCredentials of the next Verify call. The server verifies the entered credentials and responds with CHALLENGE or IN_PROCESS if additional information (or confirmations) are required to complete the authentication. The IN_PROCESS status is returned for authentication steps that may take a lot of time. The caller should invoke the Verify call again using the same referenceID to 'poll' on the result of a previous IN_PROCESS authentication. Alternatively, Verify responds with SUCCESS if all required authentication credentials have been provided, FAIL if the verification of a credential failed, or ERROR for malformed requests.
+  version: 1.0.2
+  termsOfService: https://community.rsa.com/docs/DOC-67224 (Section - 3. Software)
+  contact:
+    url: https://community.rsa.com/community/products/securid
+  license:
+    name: Proprietary
+    url: https://community.rsa.com/docs/DOC-67224
+#
+# For SecurID Access, the hostname will be in the format {tenant-sub-domain}.securid.com. The tenant-ID
+#    will be derived from the FQHN.
+#
+basePath: /mfa/v1_1
+#
+# It is the clients responsibility to establish a list of trusted server certificate authorities (CA) 
+#    and validate the server's certificate is signed by a trusted CA. This should be done as a standard
+#    part of the client's SSL configuration.
+#
+schemes:
+  - https
+#------------------------------------------------------------------------------
+# Header based security token.
+#------------------------------------------------------------------------------
+securityDefinitions:
+  # An API key is provided to the client as a part of its configuration.
+  #   The client sets the key value to the value provided by the server. This is the 
+  #   default configuration. The server may be configured to require that the client
+  #   use the key to calculate an HMAC of the request. In this case, it is calculated as:
+  #
+  #             requestBodyHash = SHA-512(requestBody)
+  #             messageToHmac = methodType||"\n"||requestBodyHash||"\n"||requestPath||"\n" +
+  #                                 dateString||"\n"||accessID
+  #             hmacKey = createHmacKey( getBytes(accessKey) )
+  #             requestHmacBytes = HmacSHA256( hmacKey, messageToHmac)
+  #             clientKeyHmac = Base64(requestHmacBytes)
+  #
+  #   where the following variables involved are:
+  #         requestBody - The body of the post after the HTTP header. Blank for GET methods.
+  #         methodType - The type of the request. Generally the text "POST".
+  #         requestPath - The path of the request, excluding the transport, the
+  #                       hostname, and port. For example: /mfa/v1_1/authn/initialize
+  #         dateString - The date of the request. This must also be included in the
+  #                      HTTP headers as "Date".
+  #         accessID - The Access ID from the REST configuration interface.
+  #         accessKey - The Access Key from the REST configuration interface.
+  #
+  #   And functions are:
+  #         SHA-512() - generates a 512-bit SHA hash result on the input bytes.
+  #         || - denotes string concatenation. 
+  #         createHmacKey() - creates a key from the bytes provided.
+  #         getBytes() - provides the byte values for the data provided.
+  #         HmacSHA256() - Calculates a HmacSHA256 from the key and data provided.
+  #         Base64() - Creates a Base64 encoded string for the binary data provided.
+  #
+  # The final "clientKeyHmac" is set as the client-key in the ApiClient. An implementation is
+  #     provided in some of the examples.
+  #
+  client-key:
+    type: apiKey
+    name: client-key
+    in: header
+#-------------------------------------------------------------------------------
+# Multi-Factor Authentication REST API paths
+#-------------------------------------------------------------------------------
+paths:
+  #=============================================================================
+  /authn/initialize:
+    post:
+      tags:
+        - user
+      summary: Initialize an authentication attempt.
+      description: This request should be used when the client wants to start an authentication attempt. This calls returns an "authnAttemptId" in the "AuthnResponse:ResponseContext" that will be used to identify the attempt in subsequent calls.
+      operationId: initialize
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - client-key: []
+      parameters:
+        - in: body
+          name: initializeParams
+          description: Authentication request initialization parameters
+          required: true
+          schema:
+            $ref: "#/definitions/Initialize"
+      responses:
+        200:
+          description: Initialize request is complete. Response contains information indicating if a subsequent response is needed.
+          schema:
+            $ref: "#/definitions/AuthNResponse"
+        400:
+          description: Malformed request.
+  #=============================================================================
+  /authn/verify:
+    post:
+      tags:
+        - user
+      summary: Verify authentication credentials.
+      description: This request should be used when the client wants to provide authentication credentials (i.e., a password, an OTP, etc.) in association with a previously initialized authentication attempt.
+      operationId: verify
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - client-key: []
+      parameters:
+      # Add api_key reference
+        - in: body
+          name: verifyParams
+          description: Authentication request verification parameters
+          required: true
+          schema:
+            $ref: "#/definitions/Verify"
+      responses:
+        200:
+          description: Verify request is complete. THe response contains information indicating if a subsequent response is needed.
+          schema:
+            $ref: "#/definitions/AuthNResponse"
+        # Alternative considered here was to have a different HTTP response for a verify request that
+        #     requires another challenge.
+        400:
+          description: Malformed request.
+  #=============================================================================
+  /authn/cancel:
+    post:
+      tags:
+        - user
+      summary: Cancels a previously initialized authentication.
+      description: This request should be used when the client wants to explicitly cancel an authentication attempt.
+      operationId: cancel
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - client-key: []
+      parameters:
+        - in: body
+          name: cancelParams
+          required: true
+          schema:
+            $ref: "#/definitions/Cancel"
+      responses:
+        200:
+          description: Cancel complete. The authentication request has been cancelled.
+          schema:
+            $ref: "#/definitions/AuthNResponse"
+        400:
+          description: Malformed request.
+  #=============================================================================
+  /authn/status:
+    post:
+      tags:
+        - user
+      summary: Checks status of initialized authentication.
+      description: This is called by a subsequent session to be able to check or verify a previous authentication result. The "CheckStatus" request contains a "authnAttemptId" from a previous successful authentication. By default, this interface can be called once (see "CheckStatus" definition).
+      operationId: status
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - client-key: []
+      parameters:
+        - in: body
+          name: statusParams
+          required: true
+          schema:
+            $ref: "#/definitions/CheckStatus"
+      responses:
+        200:
+          description: Status is returned
+          schema:
+            $ref: "#/definitions/AuthNStatusResponse"
+        400:
+          description: Malformed request.
+  #=============================================================================
+  /authn/resources:
+    get:
+      tags:
+        - client
+        - i18n
+      summary: Provides I18N language resources.
+      description: The client can use this interface to GET prompt text values for all prompts or for a specific prompt.
+      operationId: getResourceId
+      consumes:
+        - application/json
+      produces:
+        - application/json;charset=UTF-8
+      security:
+        - client-key: []
+      parameters:
+        - name: lang
+          in: query
+          description: Locale of language to be used for prompt text. ISO 639-1 language code followed by an ISO 3166 country code separated by an underscore. For example, "en_US". See https://www.ietf.org/rfc/rfc3066.txt
+          required: true
+          type: string
+        - name: resourceId
+          in: query
+          description: A specific promptResourceId to be obtained by the client.
+          required: false
+          type: string
+      responses:
+        200:
+          description: The request for the language resource was successful.
+          schema:
+            type: array
+            description: This is an array of resourceId's and the corresponding prompt text in the language requested. Each of the values is the prompt text encoded in UTF-8. If a single "resourceId" was requested, this will be an array of one item.
+            items:
+              $ref: "#/definitions/NameValuePair"
+        404:
+          description: The requested language or language/resourceId pair is not available.
+        400:
+          description: Malformed request.
+          
+########################################################################################################
+# Object definitions.
+########################################################################################################
+definitions:
+  #-----------------------------------------------------------------------------
+  # Message Context - This provides data common to all request messages. 
+  #-----------------------------------------------------------------------------
+  MessageContext:
+    type: object
+    description: Common authentication request context data. This is both provided to and returned by the server. Apart from the replay detection data (messageId/inResponseTo), the server's response contains the authentication attempt ID. This ID must be returned in subsequent calls.
+    properties:
+      authnAttemptId:      
+        type: string
+        description: A random number representing a unique, transient ID to identify and track the authentication. This identifier must be the same for all subsequent calls. This value will be returned by the server and will be a randomly generated GUID. This cannot be provided in the client "initialize" request. Required for "verify" calls.
+      messageId:
+        type: string
+        description: A random message ID. The client should check that the server's response "inResponseTo" value contains the "messageId" provided by the client. In server responses, this value must be provided back to the server in subsequent responses in the "inResponseTo" field. Required.
+      inResponseTo:
+        type: string
+        description: The random message ID of the previous message to which this request responds. This can be empty or null for the first request context to an initialize call. This must be provided and contain the messageId returned by the server when making subsequent responses. Required for all requests other than "initialize" calls.
+    required:
+    - messageId
+    # authnAttemptId and inResponseTo - Required for "verify", "cancel" and "status" calls.
+  #-----------------------------------------------------------------------------
+  # Initialization object - 
+  #-----------------------------------------------------------------------------
+  Initialize:
+    type: object
+    description: Authentication request initialization parameters. This contains information to start an authentication attempt. This may contain credentials and information about the assurance requirements (methods) being satisfied.
+    example: { "authnAttemptTimeout":180, "clientId":"authclient.corp.com", "subjectName":"bsmith", "lang":"us_EN", "assurancePolicyId":"standard-web","context":{"messageId":"1d3b6ac5-8e18-4e4c-b7f9-becab1f73ad0"}}
+    properties:
+      authnAttemptTimeout:      
+        type: number
+        default: 180
+        maximum: 900
+        description: A number in seconds representing how long the server will keep the authentication attempt ID available after each call. During this time is is possible to make other calls using the "authnAttemptId". The server may reject initialization requests if the value provided is beyond the allowable maximum. Defaults to a server-defined session lifetime. Optional.
+      tenantId:      
+        type: string
+        description: Tenant identifier valid at the IA Service. This is also provided in the request URL. If this is provided, it must match the tenant ID derived from the requst URL or the call may be rejected. Optional.
+      clientId:    
+        type: string
+        description: Client identifier valid at the IA Service. This may either be a logical client ID  such as "RADIUS", "Chrome", or may be a Fully Qualified Host Name (FQHN) of the client host. This may be used by the server to determine access control. If a clientId is not provided, a default value may be derived from the HTTP header information. Optional.
+      subjectName:
+        type: string
+        description: User/Account identifier. This shall contain the login ID of the principal requesting the authentication. The format depends on the context. This value may be a AD "samAccountName", an email address. Required.
+      display:
+        type: string
+        description: This is intended to provide a "hint" to the server as to the display characteristics or capabilities of the client. Possible values may indicate whether the client is rendering the interface in a web page, RADIUS client, Windows, etc. Used by the server to provide responses tailored for rendering on the client. Optional. 
+      lang:
+        type: string
+        default: us_EN
+        description: This defines the language for prompt text provided by the interface in the "MethodPrompt" response. Optional. 
+      assurancePolicyId: 
+        description: This may contain the name of a policy which should be resolved in policy decision stage. For now, we assume this is a policy name. Mutually exclusive with "assuranceLevel" and "authMethodId". Optional.
+        type: string
+      assuranceLevel:
+        description: This may contain the required assurance level for authentication. Mutually exclusive with "assurancePolicyId" and "authMethodId". Optional.
+        type: string
+        enum: [ "LOW", "MEDIUM", "HIGH" ]
+      authMethodId:
+        description: This may contain the name of an authentication method which should be used to authenticate. Mutually exclusive with "assurancePolicyId" and "assuranceLevel". Optional.
+        type: string
+      sessionAttributes:
+        description: This is a list of collected data related to the event. The session attribute values may be used in policy decision flow. Examples of possible values include local IP address, HTML5/GEO location, device fingerprint, accessed resource name (if possible), etc. These values are intended for use in RISK/TRUST evaluation engine. Possible keys will be provided in a session attribute dictionary. Optional.
+        type: array
+        items:
+          $ref: "#/definitions/NameValuePair"
+      subjectCredentials:
+        description: This can be used to provide a list of previously collected credentials. For example, this can be used to provide a basic credential like a password to MFA interface with the initialize call (to facilitate a 'single-step" authentication process). Optional.
+        type: array
+        items: 
+            $ref: "#/definitions/Credential"
+      clientDetails:
+        $ref: "#/definitions/ClientDetails"
+      context:
+        $ref: "#/definitions/MessageContext"
+      keepAttempt:
+        type: boolean
+        default: false
+        description: By default, completed authentication attempts are removed from the server. A "true" value can be provided to have complete or cancelled authentication attempts retained until they are removed or expire. This value should be set to "true" if a subsequent CheckStatus call will be made. A 'complete' authentication attempt is any attempt for which an Initialize or Verify call have returned a ResponseCode other than CHALLENGE or IN_PROCESS.
+    required:
+    - subjectName
+    - context
+  #-----------------------------------------------------------------------------
+  # Credential verification request.
+  #-----------------------------------------------------------------------------
+  Verify:
+    type: object
+    description: This contains an array of credentials to be verified and an authentication context. The context was returned by either the initialize call or a previous verify call. The context must be updated from the previous server response to contain a new, random "messageId". The "messageId" returned from the previous server response must be copied to the "inResponseTo" field in the context at each call.
+    properties:
+      subjectCredentials:
+        description: This provides an array of collected credentials. Required.
+        type: array
+        items: 
+          $ref: "#/definitions/Credential"
+      context:
+        $ref: "#/definitions/MessageContext"
+    required:
+    - subjectCredentials
+    - context
+  #-----------------------------------------------------------------------------
+  # Collected credential.
+  #-----------------------------------------------------------------------------
+  Credential:
+    type: object
+    description: This contains an array of credential input values to be verified. The "name" field of the "collectedInputs" name-value pair is expected to be a "methodId" value from the "AuthenticationMethod" returned by the server.
+    properties:
+      methodId: 
+        type: string
+        description: This is the method for which the input was collected.
+      referenceId:
+        type: string
+        description: This is the identifier that the server returns in the previous response, in reference to the current verification state of the method. See referenceId in AuthenticationMethodVersion.
+      versionId:
+        type: string
+        description: This is the version of method implementation supported and collected by a client.
+      collectedInputs: 
+        description: This provides an array of one or more collected credential input values.  Required.
+        type: array
+        items: 
+          $ref: "#/definitions/NameValuePair"
+    required:
+    - methodId
+    - collectedInputs
+        
+  #-----------------------------------------------------------------------------
+  # Authentication cancellation request.
+  #-----------------------------------------------------------------------------
+  Cancel:
+    type: object
+    description: This contains information to cancel a pending authentication attempt by providing the "authnAttemptId" returned by the "initialize" call. By default, an authentication attempt times-out after 3 minutes (180 seconds). 
+    properties:
+      reason:
+        type: string
+        description: Optional reason code for the cancel request. 
+        default: USER_ACTION
+        enum: [ "USER_ACTION", "TIME_OUT" ]
+      authnAttemptId:
+        type: string
+        description: This is an authnAttemptId returned by a previous "initialize" call in the "AuthNResponse:RequestContext:authnAttemptId".
+      removeAttemptId:
+        type: boolean
+        default: true
+        description: Requests that the authentication attempt ID be removed as a part of this "cancel" call.
+    required:
+    - authnAttemptId
+
+  #-----------------------------------------------------------------------------
+  # Authentication status verification request.
+  #-----------------------------------------------------------------------------
+  CheckStatus:
+    description: The CheckStatus call allows a client to verify that an authentication started for the user with specific assurance requirements is completed. This allows the client to verify that an authentication attempt performed by another client is complete. No call to initialize is required prior to making this call. This interface can also remove information about the authentication attempt from the server. The server responds with a AuthNStatusResponse.
+    type: object
+    properties:
+      authnAttemptId:
+        type: string
+        description: The authentication ID provided as a result of an initialize call. This call may have been performed in another client or session.
+      removeAttemptId:
+        type: boolean
+        default: true
+        description: Requests that the authentication attempt ID be removed as a part of this "check" call.
+    required:
+    - authnAttemptId
+
+  #-----------------------------------------------------------------------------
+  # Named Attribute and Value Pair
+  #-----------------------------------------------------------------------------
+  NameValuePair:
+    type: object
+    description: A name-value pair. 
+    properties:
+      name:   
+        type: string
+      value:
+        type: string
+      dataType:
+        type: string
+        description: Defines the data-type for the property. The default is "STRING". Binary values are Base64 encoded.
+        default: "STRING"
+        enum: [ "STRING", "INT32", "INT64", "BOOLEAN", "BINARY", "ISOTIME" ]
+    required:
+    - name
+    - value
+  #-----------------------------------------------------------------------------
+  # Authentication attempt and credential result response code.
+  #-----------------------------------------------------------------------------
+  ResponseCode:
+    type: string
+    enum: [ "SUCCESS", "FAIL", "ERROR", "CHALLENGE", "IN_PROCESS" ]
+    description: A response status code representation.
+          SUCCESS - The authentication is completed successfully.
+          IN_PROCESS - The authentication is not complete but remains in-process. For some OOB (PUSH) methods, the client must retry with verification "verify" call. For APPROVE method, we will receive IN_PROCESS status , and "APPROVE_CHECK" as method in "challengeMethods" field
+          CHALLENGE - The method is incomplete and method(s) in the "challengeMethods" are required. For example, the "challengeMethods" may contain data requiring the client to perform a secondary challenge.
+          ERROR - A technical error occurred in processing the client request. The authnAttemptId is no longer valid.
+          FAIL - The "credentials" presented were incorrect. means that a user failed authentication in this attempt
+    default: "FAIL"
+
+  #-----------------------------------------------------------------------------
+  # Authentication Status check Response
+  #-----------------------------------------------------------------------------
+  AuthNStatusResponse:
+    type: object
+    description: This is returned by the server as a result of calling the /authn/status interface. This returns the information from the server 
+    properties:
+      attemptResponseCode:
+        $ref: "#/definitions/ResponseCode"
+      attemptReasonCode:
+        type: string
+        description: Specific details about the circumstances of result of the action requested.
+      subjectName:
+        type: string
+        description: The name of the subject that completed the authentication.
+      authnPolicyId:
+        type: string
+        description: The name of the policy ID provided with the initialize call.
+      sessionAttributes:
+        type: array
+        description: This is an array of session attributes provided with the Initialize call.
+        items:
+          $ref: "#/definitions/NameValuePair"
+      successfulMethods:
+        type: array
+        description: This is an array of method ID strings of methods successfully completed in association with this authentication.
+        items:
+          type: string
+      attemptExpires:
+        type: string
+        format: dateTime
+        description: This is the date and time at which this authentication attempt expires. No further verify or status calls can be made after this time (or if the status check requests deletion of the attempt).
+  #-----------------------------------------------------------------------------
+  # Authentication Response - 
+  #-----------------------------------------------------------------------------
+  AuthNResponse:
+    type: object
+    description: Authentication Response. This provides status from any previous "verify" call as well as the authentication challenges that must be completed for authentication.
+    properties:
+      context:
+        $ref: "#/definitions/MessageContext"
+      credentialValidationResults:
+        type: array
+        description: Each entry in this array corresponds with a credential provided to the verify call.
+        items:
+          type: object
+          properties:
+            methodId: 
+              type: string
+              description: This is the method ID of the AuthenticationMethod associated with this result.
+            methodResponseCode:
+              $ref: "#/definitions/ResponseCode"
+            methodReasonCode:
+              type: string
+              description: Specific details about the circumstances of result of the action requested.
+            authnAttributes:
+              type: array
+              description: This is an array of attributes resulting from a successful authentication. This contains information specific to the authentication type and request. For example, this may contain RADIUS attributes or data to permit additional exchanges such as an off-line data download ticket. This will only be optionally provided if the "methodResponseCode" is "SUCCESS".
+              items:
+                $ref: "#/definitions/NameValuePair"
+      attemptResponseCode:
+        $ref: "#/definitions/ResponseCode"
+      attemptReasonCode:
+        type: string
+        description: Specific details about the circumstances of result of the action requested.
+      challengeMethods:
+        $ref: "#/definitions/ChallengeMethods"
+    required:
+    - context
+    - attemptResponseCode
+    - attemptReasonCode
+  
+  #-----------------------------------------------------------------------------
+  # Challenge Methods. OR between all sets
+  #-----------------------------------------------------------------------------
+  ChallengeMethods:
+    type: object
+    description: An array of challenge method sets one of which must be completed. There may be only one item in the "challenges". The client is free to select any of the challenges. The client must complete one set -OR- any of the other set(s). 
+    properties:
+      challenges:
+        description: An array of sets of challenges. 
+        type: array
+        items:
+          $ref: "#/definitions/ChallengeMethodSet"
+    required:
+    - challenges
+  #-----------------------------------------------------------------------------
+  # Challenge Method Set.  AND between all entries
+  #-----------------------------------------------------------------------------
+  # NOTE - This was also referred to as 'action' in the parameters but 'method' elsewhere.
+  ChallengeMethodSet:
+    type: object
+    description: An array of challenge methods all of which must be completed. There may be only one item in the "requiredMethods". The client must complete at least one of the requiredMethods before calling "verify".
+    properties:
+      methodSetId:
+        type: string
+        description: Unique ID of the Authentication method set provided by the server for convenience. It allows the client to differentiate each set of the required challenge methods during an authentication attempt.
+      requiredMethods:
+        type: array
+        items:
+          $ref: "#/definitions/AuthenticationMethod"
+    required:
+    - requiredMethods
+
+  #-----------------------------------------------------------------------------
+  # Authentication Method.
+  #-----------------------------------------------------------------------------
+  AuthenticationMethod:
+    type: object
+    description: Authentication method. This will typically represent a prompt to which the user must respond. 
+    properties:
+      methodId:
+        type: string  
+        description: Authentication method ID. This value should be provided back to the server in the CredentialValues name-value array in the response. The methodId will be the name and the value will be the value entered by the end-user or provided by the client (unless no value is required, see valueRequired).
+      displayName:
+        type: string
+        description: The display name of the authentication method ID. If the server response does not contain a displayName, use the methodId.
+      priority:
+        type: number
+        description: This provides information to the client to indicate the order or priority that should be used when processing methods. Values start at 1 with 1 being the highest priority and larger numbers indicating lower priorities. Generally used to indicate time-sensitive methods to which the user should respond first.
+        default: 1
+      versions:
+        type: array
+        description: Array of method-specific name/value pairs. 
+        items:
+          $ref: "#/definitions/AuthenticationMethodVersion"
+    required:
+    - methodId
+    - versions
+  #-----------------------------------------------------------------------------
+  # Authentication Method Version.
+  #-----------------------------------------------------------------------------
+  AuthenticationMethodVersion:
+    type: object
+    description: Authentication method. This will typically represent a prompt to which the user must respond. Each version may have different method attributes.
+    properties:
+      versionId:
+        type: string
+        default: 1.0.0
+      methodAttributes:
+        type: array
+        description: Array of method-specific name/value pairs. 
+        items:
+          $ref: "#/definitions/NameValuePair"
+      valueRequired:
+        type: boolean
+        default: true
+        description: If this is true, a value must be entered and returned to the server for this prompt. If this is false, no value needs to be obtained from the end-user. The client only needs to indicate this method was selected. This will initiate an out-of-band authentication process typically to the end-users mobile device.
+      referenceId:
+        type: string
+        description: An identifier referencing the verification state of certain out-of-band authentication methods, which may require the client to pass this identifier back in subsequent 'verify' calls.
+      prompt:
+        $ref: "#/definitions/MethodPrompt"
+    required:
+    - versionId
+    - prompt
+  #-----------------------------------------------------------------------------
+  # Method Prompt - Provides detailed information needed to prompt for data needed
+  #    complete an authentication method.
+  #-----------------------------------------------------------------------------
+  MethodPrompt:
+    type: object
+    description: Authentication method prompt information.
+    properties:
+      promptResourceId:
+        type: string
+        description: A resource ID of the prompt text. This is an immutable identified that can be used to lookup prompt text for this prompt. For example, this may be "PROMPT.LDAP.PASSWORD", or "PROMPT.SID.NEXT_TOKENCODE". Values that cannot be resolved locally by a client can be retrieved from the server by performing a GET on the "/authn/resources" for the required language. Once resolved, the "promptArgs" must be formatted into the prompt text place holders ({0}, {1}, etc.)
+      defaultText:
+        type: string
+        description: Default text for the prompt. This would be in the language requested in the "initialize" call with the "promptArgs" values already formatted.
+      formatRegex:
+        type: string
+        description: Format descriptor regular expression for the user's entry.
+      defaultValue:
+        type: string
+        description: Predefined response default value. If no value is provided for this prompt, this is the value the server will use.
+      valueBeingDefined:
+        type: boolean
+        default: false
+        description: This is true if the value is being defined by the user's entry. Typically true for prompts of values like new passwords or new PINs. It is expected the client will provide some mechanism for the end-user to verify their knowledge of the value entered before returning same to the server. For example, the client may request the value twice and validate that both values match.
+      sensitive:
+        type: boolean
+        default: true
+        description: This is true if the value is considered sensitive and its entry should be masked by the client.
+      minLength:
+        type: number
+        description: Minimum allowed length in characters.
+      maxLength:
+        type: number
+        description: Maximum allowed length in characters.
+      promptArgs:
+        type: array
+        items:
+          type: string
+          description: Positional prompt argument string starting with place holder number zero ("{0}"). Each item in this array may be another resource identifier. Array elements with the form "${<resource>}", where <resource> is a resource identifier, imply that the client must substitute the array element for another I18N text resource prior to formatting the prompt text.
+    required:
+    - promptResourceId
+    - defaultText
+
+  #-----------------------------------------------------------------------------
+  # Collected Client Details - This contains details about the client initializing the authentication.
+  #-----------------------------------------------------------------------------
+  ClientDetails:
+    type: object
+    description: This contains the client's details.
+    properties:
+      hostname: 
+        type: string
+        description: Client fully qualified hostname.
+      softwareId:
+        type: string
+        description: Unique ID generated for each client installation.
+      version:
+        type: string
+        description: Version for the installed client.
+      component: 
+        type: string
+        description: Installed client name.
+      platform:
+        type: string
+        description: The operating system on which the client is installed. The version of the operating system may be included.
+      language:
+        type: string
+        description: Language used by the installed client.               
+
+  #------------------
