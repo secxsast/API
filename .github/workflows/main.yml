@@ -1,0 +1,30 @@
+name: Security Scan
+on:
+  push:
+   branches:
+     - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+     - name: Checkout
+       uses: actions/checkout@v2
+     - name: Checkmarx AST CLI Action
+       uses: Checkmarx/ast-github-action@2.0.3
+       with:
+         project_name: ${{ github.repository }}
+         cx_tenant: nfr_trustdimension
+         base_uri: https://ast.checkmarx.net
+         cx_client_id: ${{ secrets.CLIENT_ID }}
+         cx_client_secret: ${{ secrets.SECRET }}
+         branch: ${{ github.ref }}
+     - name: Sonar CLI Action
+       uses: sonarsource/sonarqube-scan-action@master
+       env:
+         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       with:
+        args: >
+          -Dsonar.externalIssuesReportPaths=cx_result_sonar.json
+          -Dsonar.projectKey=API
