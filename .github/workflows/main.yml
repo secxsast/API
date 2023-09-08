@@ -1,0 +1,20 @@
+name: GSL_workflow_01
+on:
+ push:
+  branches:
+    -main
+jobs:
+  build:
+   runs-on: ubuntu-latest
+   steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Checkmarx AST CLI Action_GSL
+      uses: Checkmarx/ast-github-action@2.0.3
+      with:
+       project_name: ${{github.repository}}
+       cx_tenant: nfr_trustdimension
+       base_uri: https://ast.checkmarx.net
+       cx_client_id: ${{ secrets.GSL_GITHUB_IDCLIENT}}
+       cx_client_secret: ${{ secrets.GSL_GitHub_SECRET}}
+       branch: ${{github.ref}}
