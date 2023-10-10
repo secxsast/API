@@ -21,4 +21,4 @@ jobs:
          branch: ${{ github.ref }}
          additional_params: 
           --threshold "sast-high=1;sca-high=1"
-          --project-tags [oxxo]
+          --project-tags [oxxo_tag]
