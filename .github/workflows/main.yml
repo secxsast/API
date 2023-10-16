@@ -1,4 +1,4 @@
-name: ASTSCAa
+name: ASt
 on:
   push:
    branches:
