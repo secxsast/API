@@ -20,5 +20,6 @@ jobs:
          cx_client_secret: ${{ secrets.SECRET }}
          branch: ${{ github.ref }}
          additional_params: 
+          --sast-incremental
           --threshold "sast-high=1;sca-high=1"
           --project-tags [oxxo_ta]
