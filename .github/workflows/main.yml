@@ -11,7 +11,7 @@ jobs:
      - name: Checkout
        uses: actions/checkout@v2
      - name: Checkmarx AST CLI Action
-       uses: checkmarx/ast-github-action@main
+       uses: Checkmarx/ast-github-action@2.0.3
        with:
          project_name: ${{ github.repository }}
          cx_tenant: nfr_trustdimension
@@ -22,4 +22,4 @@ jobs:
          additional_params: 
           --sast-incremental
           --threshold "sast-high=1;sca-high=1"
-          --project-tags oxxo_ta
+          --project-tags "oxxo_ta;ta"
