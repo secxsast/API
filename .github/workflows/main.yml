@@ -22,4 +22,4 @@ jobs:
          additional_params: 
           --sast-incremental
           --threshold "sast-high=1;sca-high=1"
-          --project-tags "oxxo_ta;ta"
+          --project-tags oxxo_ta,ta
