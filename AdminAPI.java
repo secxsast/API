@@ -1,5 +1,5 @@
 //  Copyright (c) 2009, RSA, The Security Division of EMC
-//          All Rights Reserved.klsaksacxsastAscan
+//          All Rights Reserved.klsaksacxsastAscantest
 
 package com.rsa.samples.admin;
 
