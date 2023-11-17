@@ -1,4 +1,4 @@
-name: ASTCXADA
+name: AST
 on:
   push:
    branches:
@@ -20,7 +20,5 @@ jobs:
          cx_client_secret: ${{ secrets.SECRET }}
          branch: ${{ github.ref }}
          additional_params:
-          --scan-types sca
           --threshold "sast-high=1; sast-medium=1"
-          --sast-incremental
           --project-tags oxxo_ta,ta
