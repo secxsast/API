@@ -1,4 +1,4 @@
-name: AST
+name: ASTCxSAST
 on:
   push:
    branches:
