@@ -1,6 +1,6 @@
 //  Copyright (c) 2009, RSA, The Security Division of EMC
 //          All Rights Reserved.klsaksacxsastAscantesta
-//testing_dachrf
+//testing_dach20
 package com.rsa.samples.admin;
 
 import java.util.ArrayList;
