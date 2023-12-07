@@ -23,3 +23,4 @@ jobs:
          additional_params:
           --threshold "sast-high=1; sast-medium=1"
           --project-tags oxxo_ta,ta,oes
+          --tags oxxotest
