@@ -2,7 +2,7 @@ name: ASTCxSAST
 on:
   push:
    branches:
-     - main
+     - mainlfslkjf
      - develop1
      - develop2
 jobs:
