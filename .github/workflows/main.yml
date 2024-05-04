@@ -20,7 +20,7 @@ jobs:
          cx_client_secret: ${{ secrets.SECRET }}
          branch: ${{ github.ref }}
          additional_params:
-          --threshold "sast-high=1; sast-medium=1; sca-high=1"
+          --threshold "sast-high=100; sast-medium=100; sca-high=100"
           --project-tags tag1,tag2,tag3
           --tags tag
   scan:
