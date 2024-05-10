@@ -31,7 +31,7 @@ jobs:
        with:
         command: "web"
         config: './security_tweets.yaml'
-        base_url: "ast.checkmarx.net"
+        base_url: "https://ast.checkmarx.net"
         environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
         fail_on: "HIGH"
         verbose: true
