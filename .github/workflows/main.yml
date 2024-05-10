@@ -25,7 +25,7 @@ jobs:
           --tags tag
 
      - name: Checkmarx DAST
-       uses: checkmarx/dast-github-action@v1.0
+       uses: Checkmarx/dast-github-action@v1.0.0-beta
        env:
          CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
        with:
@@ -35,6 +35,11 @@ jobs:
         environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
         fail_on: "HIGH"
         verbose: true
+     - uses: actions/upload-artifact@v3
+       name: Upload Logs
+       with:
+        name: report
+        path: ./output
     
      - name: Rapid7 InsightAppSec Scan
        uses: rapid7/insightappsec-scan-github-actions@v1.1.0
