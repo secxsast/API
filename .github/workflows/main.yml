@@ -15,7 +15,7 @@ jobs:
        with:
          project_name: ${{ github.repository }}
          cx_tenant: nfr_trustdimension
-         base_uri: http://testhtml5.vulnweb.com
+         base_uri: https://ast.checkmarx.net
          cx_client_id: ${{ secrets.CLIENT_ID }}
          cx_client_secret: ${{ secrets.SECRET }}
          branch: ${{ github.ref }}
@@ -31,7 +31,7 @@ jobs:
        with:
         command: "web"
         config: './security_tweets.yaml'
-        base_url: "https://ast.checkmarx.net"
+        base_url: "http://testhtml5.vulnweb.com"
         environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
         fail_on: "HIGH"
         verbose: true
