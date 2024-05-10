@@ -25,7 +25,7 @@ jobs:
           --tags tag
 
      - name: Checkmarx DAST
-       uses: checkmarx/dast-action@latest
+       uses: Checkmarx/dast-action@latest
        env:
          CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
        with:
