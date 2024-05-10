@@ -32,7 +32,7 @@ jobs:
         command: "web"
         config: './security_tweets.yaml'
         base_url: "http://testhtml5.vulnweb.com"
-        environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
+        environment_id: "65a34357-bb8c-4873-ae6e-6958ffec9341"
         fail_on: "HIGH"
         verbose: true
      - uses: actions/upload-artifact@v3
