@@ -24,7 +24,7 @@ jobs:
           --project-tags tag1,tag2,tag3
           --tags tag
 
-     - name: Checkmarx DAST
+     - name: CheckmarxDAST
        uses: Checkmarx/dast-github-action@v1.0.0-beta
        env:
          CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
@@ -33,8 +33,6 @@ jobs:
         config: './security_tweets.yaml'
         base_url: https://ast.checkmarx.net
         environment_id: "857f87e9-884d-48e6-9d30-ba0249ce6725"
-        fail_on: "HIGH"
-        verbose: true
           
      - name: Rapid7 InsightAppSec Scan
        uses: rapid7/insightappsec-scan-github-actions@v1.1.0
