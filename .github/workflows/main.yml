@@ -32,13 +32,9 @@ jobs:
         command: "web"
         config: './security_tweets.yaml'
         base_url: https://ast.checkmarx.net
-        environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
+        environment_id: "857f87e9-884d-48e6-9d30-ba0249ce6725"
+        fail_on: "HIGH"
         verbose: true
-     - uses: actions/upload-artifact@v3
-       name: Upload Logs
-       with:
-        name: report
-        path: ./output
           
      - name: Rapid7 InsightAppSec Scan
        uses: rapid7/insightappsec-scan-github-actions@v1.1.0
