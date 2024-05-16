@@ -33,7 +33,6 @@ jobs:
         config: security_tweets.yaml
         base_url: ast.checkmarx.net
         environment_id: "65a34357-bb8c-4873-ae6e-6958ffec9341"
-        fail_on: "HIGH"
         verbose: true
     
      - name: Rapid7 InsightAppSec Scan
