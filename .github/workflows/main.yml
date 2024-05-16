@@ -23,17 +23,6 @@ jobs:
           --threshold "sast-high=100; sast-medium=100; sca-high=100"
           --project-tags tag1,tag2,tag3
           --tags tag
-          
-     - name: Rapid7 InsightAppSec Scan
-       uses: rapid7/insightappsec-scan-github-actions@v1.1.0
-       with:
-         region: "us"
-         api-key: ${{ secrets.IAS_API_KEY }}
-         scan-config-id: "6a8a7522-e581-4a23-bc4a-792580c59bdb"
-         vuln-query: "vulnerability.severity = 'HIGH'"
-     - name: Upload findings
-       if: always()
-       run: echo "${{ steps.my-scan.outputs.scan-findings }}"
 
      - name: Checkmarx DAST
        uses: Checkmarx/dast-github-action@v1.0.0-beta
@@ -45,3 +34,19 @@ jobs:
         base_url: https://ast.checkmarx.net
         environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
         verbose: true
+     - uses: actions/upload-artifact@v3
+       name: Upload Logs
+       with:
+        name: report
+        path: ./output
+          
+     - name: Rapid7 InsightAppSec Scan
+       uses: rapid7/insightappsec-scan-github-actions@v1.1.0
+       with:
+         region: "us"
+         api-key: ${{ secrets.IAS_API_KEY }}
+         scan-config-id: "6a8a7522-e581-4a23-bc4a-792580c59bdb"
+         vuln-query: "vulnerability.severity = 'HIGH'"
+     - name: Upload findings
+       if: always()
+       run: echo "${{ steps.my-scan.outputs.scan-findings }}"
