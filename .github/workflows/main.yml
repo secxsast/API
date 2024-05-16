@@ -30,7 +30,7 @@ jobs:
          CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
        with:
         command: "web"
-        config: security_tweets.yaml
+        config: './security_tweets.yaml'
         base_url: https://ast.checkmarx.net
         environment_id: "65a34357-bb8c-4873-ae6e-6958ffec9341"
         verbose: true
