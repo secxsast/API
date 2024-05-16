@@ -32,7 +32,7 @@ jobs:
         command: "web"
         config: './security_tweets.yaml'
         base_url: https://ast.checkmarx.net
-        environment_id: "681fd9e39-9843-441d-bd86-d7d343eb06dc"
+        environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
         verbose: true
     
      - name: Rapid7 InsightAppSec Scan
