@@ -60,8 +60,8 @@ jobs:
       maxCrawlDepth: 10
       numberOfBrowsers: 1
       runOnlyIfModern: false
-    name: "spider"
-    type: "spider"
+    name: "spiderAjax"
+    type: "spiderAjax"
   - parameters: {}
     name: "passiveScan-wait"
     type: "passiveScan-wait"
