@@ -1,4 +1,4 @@
-name: ASTCx
+name: APPST
 on:
   push:
    branches:
