@@ -1,4 +1,4 @@
-name: APSEC
+name: APPSEC
 on:
   push:
    branches:
