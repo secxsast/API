@@ -23,11 +23,20 @@ jobs:
           --threshold "sast-high=1; sast-medium=100; sca-high=100"
           --project-tags tag1,tag2,tag3
           --tags tags
+     - uses: actions/checkout@v3
      - name: Checkmarx DAST Github Action
-       uses: checkmarx/dast-github-action@v1.0
+       uses: Checkmarx/dast-github-action@v1.0.0-beta
        env:
         CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
        with:
         command: "web"
         config: 'security_tweets.yaml'
-        environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"  
+        base_url: "https://ast.checkmarx.net"
+        environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
+        fail_on: "HIGH"
+        verbose: true
+     - uses: actions/upload-artifact@v3
+       name: Upload Logs
+       with:
+        name: report
+        path: ./output
