@@ -24,7 +24,7 @@ jobs:
           --project-tags tag1,tag2,tag3
           --tags tags
      - name: Checkmarx DAST Github Action
-       uses: checkmarx/dast-action@latest
+       uses: checkmarx/dast-github-action@v1.0
        env:
         CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
        with:
