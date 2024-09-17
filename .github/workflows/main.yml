@@ -11,13 +11,13 @@ jobs:
      - name: Checkout
        uses: actions/checkout@v3
      - name: CheckmarxDAST
-       uses: checkmarx/dast-github-action@v1.0
+       uses: Checkmarx/dast-github-action@v1.0.0-beta
        env:
          CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
        with:
         command: "web"
         config: './security_tweets.yaml'
-        base_url: https://ast.checkmarx.net
+        base_url: "https://ast.checkmarx.net"
         environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"        
      - name: Checkmarx AST CLI Action
        uses: checkmarx/ast-github-action@main #Github Action version
