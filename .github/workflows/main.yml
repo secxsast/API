@@ -28,9 +28,9 @@ jobs:
             environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
             log_level: info
             base_url: "https://ast.checkmarx.net"
-            fail_on: ""
-            verbose: true
-            output: ./output 
+            #fail_on: ""
+            #verbose: true
+            #output: ./output 
      - name: SAST
        uses: checkmarx/ast-github-action@main #Github Action version
        with:
