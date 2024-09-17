@@ -1,4 +1,4 @@
-name: APPSEC
+name: DevOps
 on:
   push:
    branches:
