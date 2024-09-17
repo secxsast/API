@@ -4,22 +4,34 @@ on:
    branches:
      - main
      - develop
+permissions:
+  contents: read
 jobs:
   build:
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     runs-on: ubuntu-latest
     steps:
      - name: Checkout
        uses: actions/checkout@v3
-     - name: CheckmarxDAST
-       uses: Checkmarx/dast-github-action@v1.0.0-beta
+     - name: DAST
+       run: nc -vz iam.checkmarx.net 443        
+     - name: Checkmarx DAST Github Action
+       uses: Checkmarx/dast-github-action@v1.0.2
        env:
-         CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
+          CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
        with:
-        command: "web"
-        config: './security_tweets.yaml'
-        base_url: "https://ast.checkmarx.net"
-        environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"        
-     - name: Checkmarx AST CLI Action
+            command: web
+            config: './security_tweets.yaml'
+            environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
+            log_level: info
+            base_url: "https://ast.checkmarx.net"
+            fail_on: ""
+            verbose: true
+            output: ./output 
+     - name: SAST
        uses: checkmarx/ast-github-action@main #Github Action version
        with:
          project_name: ${{ github.repository }}
