@@ -4,14 +4,8 @@ on:
    branches:
      - main
      - develop
-permissions:
-  contents: read
 jobs:
   build:
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
     runs-on: ubuntu-latest
     steps:
      - name: Checkout
@@ -27,10 +21,7 @@ jobs:
             config: './security_tweets.yaml'
             base_url: https://ast.checkmarx.net
             environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
-            log_level: debug
-            #fail_on: ""
-            #verbose: true
-            #output: ./output 
+            log_level: info 
      - name: SAST
        uses: checkmarx/ast-github-action@main #Github Action version
        with:
