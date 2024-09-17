@@ -2,7 +2,7 @@ name: CxONE Dast Scan
 on:
   push: 
       branches:
-      - master
+      - main
 #on: [  pull_request ]   
   
 permissions:
