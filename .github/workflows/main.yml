@@ -1,4 +1,4 @@
-name: DevSecOps
+name: DevOps
 on:
   push:
    branches:
