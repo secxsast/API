@@ -1,37 +1,49 @@
-name: DevOps
+name: CxONE Dast Scan 
 on:
-  push:
-   branches:
-     - main
-     - develop
+  push: 
+      branches:
+      - master
+#on: [  pull_request ]   
+  
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif
+     # The type of runner that the job will run on 
     runs-on: ubuntu-latest
     steps:
-     - name: Checkout
-       uses: actions/checkout@v3
-     - name: DAST
-       #run: nc -vz ast.checkmarx.net 443        
-     - name: Checkmarx DAST Github Action
-       uses: Checkmarx/dast-github-action@v1.0.2
-       env:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test Connectivity
+        run: nc -vz iam.checkmarx.net 443        
+      - name: Checkmarx DAST Github Action
+        uses: Checkmarx/dast-github-action@v1.0.2
+        env:
           CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
-       with:
-            command: "web"
-            config: 'security_tweets.yaml'
-            base_url: https://ast.checkmarx.net
-            environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
-           
-     - name: SAST
-       uses: checkmarx/ast-github-action@main #Github Action version
-       with:
-         project_name: ${{ github.repository }}
-         cx_tenant: nfr_trustdimension
-         base_uri: https://ast.checkmarx.net
-         cx_client_id: ${{ secrets.CLIENT_ID }}
-         cx_client_secret: ${{ secrets.SECRET }}
-         branch: ${{ github.ref }}
-         additional_params:
-          --threshold "sast-high=1; sast-medium=100; sca-high=100"
-          --project-tags tag1,tag2,tag3
-          --tags tags
+        with:
+            command: web
+            config: './security_tweets.yaml'
+            environment_id: "28ca3322-7f24-41d4-ad75-64954b8c7bb1"
+            log_level: info
+            base_url: "https://ast.checkmarx.net"
+            fail_on: ""
+            verbose: true
+            output: ./output
+      - name: Reclaim output directory
+        if: always()
+        run: sudo chown -R 1001:1001 ${{ github.workspace }}/output
+      - uses: actions/upload-artifact@v3
+        if: always()
+        name: Upload Logs
+        with:
+          name: report
+          path: ./output
