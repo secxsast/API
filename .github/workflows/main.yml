@@ -17,7 +17,7 @@ jobs:
      - name: Checkout
        uses: actions/checkout@v3
      - name: DAST
-       run: nc -vz iam.checkmarx.net 443        
+       #run: nc -vz ast.checkmarx.net 443        
      - name: Checkmarx DAST Github Action
        uses: Checkmarx/dast-github-action@v1.0.2
        env:
@@ -25,12 +25,12 @@ jobs:
        with:
             command: web
             config: './security_tweets.yaml'
-            environment_id: "857f87e9-884d-48e6-9d30-ba0249ce6725"
+            environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
             log_level: info
             base_url: https://ast.checkmarx.net
             #fail_on: ""
             #verbose: true
-            output: ./output 
+            #output: ./output 
      - name: Reclaim output directory
        if: always()
        run: sudo chown -R 1001:1001 ${{ github.workspace }}/output
