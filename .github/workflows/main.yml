@@ -2,7 +2,7 @@ name: AST03
 on:
   push:
    branches:
-     - maina
+     - main
      - master
 jobs:
   build:
