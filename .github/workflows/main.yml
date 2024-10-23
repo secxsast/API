@@ -2,8 +2,8 @@ name: ASOES
 on:
   push:
    branches:
-     - main
      - master
+     - main
 jobs:
   build:
     runs-on: ubuntu-latest
