@@ -1,37 +1,21 @@
-name: CxONE Dast Scan 
+name: AST03
 on:
-  push: 
-      branches:
-      - main
-#on: [  pull_request ]   
-  
-permissions:
-  contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+  push:
+   branches:
+     - maina
+     - master
 jobs:
   build:
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif
-     # The type of runner that the job will run on 
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Test Connectivity
-        run: nc -vz iam.checkmarx.net 443        
-      - name: Checkmarx DAST Github Action
-        uses: Checkmarx/dast-github-action@v1.0.2
-        env:
-          CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
-        with:
-            command: web
-            config: './security_tweets.yaml'
-            environment_id: "81fd9e39-9843-441d-bd86-d7d343eb06dc"
-            log_level: info
-            base_url: "https://ast.checkmarx.net"
+     - name: Checkout
+       uses: actions/checkout@v2
+     - name: Checkmarx AST CLI Action
+       uses: Checkmarx/ast-github-action@2.0.3
+       with:
+         project_name: ${{ github.repository }}
+         cx_tenant: nfr_trustdimension
+         base_uri: https://ast.checkmarx.net
+         cx_client_id: ${{ secrets.CLIENT_ID }}
+         cx_client_secret: ${{ secrets.SECRET }}
+         branch: ${{ github.ref }}
