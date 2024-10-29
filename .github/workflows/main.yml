@@ -1,4 +1,4 @@
-name: ASOES
+name: ASOE
 on:
   push:
    branches:
