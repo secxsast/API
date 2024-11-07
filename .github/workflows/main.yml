@@ -7,6 +7,7 @@ on:
      - pr
      - pr2
      - pr3
+     - pr4
 jobs:
   build:
     runs-on: ubuntu-latest
