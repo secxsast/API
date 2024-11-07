@@ -25,4 +25,6 @@ jobs:
          base_uri: https://ast.checkmarx.net
          cx_client_id: ${{ secrets.CLIENT_ID }}
          cx_client_secret: ${{ secrets.SECRET }}
-         branch: ${{ github.ref/refs/heads/}}
+         if: github.event_name == 'pull_request'
+         run: echo "Branch name is $GITHUB_HEAD_REF"
+         #branch: ${{ github.ref/refs/heads/}}
