@@ -1,30 +1,29 @@
-name: ASOE
+name: Generate containers-resolution.json
+
 on:
+  push:
+    branches:
+      - main
   pull_request:
-   branches:
-     - master
-     - main
-     - pr
-     - pr2
-     - pr3
-     - pr4
-     - pr5
-     - 'releases/**'
-     - pr6
+
 jobs:
-  build:
+  generate-containers-resolution:
     runs-on: ubuntu-latest
     steps:
-     - name: Checkout
-       uses: actions/checkout@v3
-     - name: Checkmarx AST CLI Action
-       uses: Checkmarx/ast-github-action@2.0.37
-       with:
-         project_name: ${{ github.repository }}
-         cx_tenant: nfr_trustdimension
-         base_uri: https://ast.checkmarx.net
-         cx_client_id: ${{ secrets.CLIENT_ID }}
-         cx_client_secret: ${{ secrets.SECRET }}
-         if: github.event_name == 'pull_request'
-         run: echo "Branch name is $GITHUB_HEAD_REF"
-         #branch: ${{ github.ref/refs/heads/}}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry (GHCR) (opcional)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      - name: Pull container image and resolve digest
+        run: |
+          IMAGE_NAME="ghcr.io/tu-usuario/tu-imagen:latest"
+          IMAGE_DIGEST=$(docker pull $IMAGE_NAME | grep "Digest" | awk '{print $2}')
+          echo "{ \"image\": \"$IMAGE_NAME@$IMAGE_DIGEST\" }" > containers-resolution.json
+
+      - name: Save containers-resolution.json as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: containers-resolution
+          path: containers-resolution.json
