@@ -1,4 +1,4 @@
-name: Generate containers-resolution.json
+name: Generate containers-resolution
 
 on:
   push:
