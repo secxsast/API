@@ -1,4 +1,4 @@
-name: Generate containers-resolution
+name: Generate containers
 
 on:
   push:
