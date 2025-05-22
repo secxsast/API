@@ -1,4 +1,4 @@
-name: Generate01
+name: Generate
 
 on:
   push:
